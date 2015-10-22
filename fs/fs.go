@@ -46,6 +46,8 @@ var partitionRegex = regexp.MustCompile("^(:?(:?s|xv)d[a-z]+\\d*|dm-\\d+)$")
 const (
 	LabelSystemRoot   = "root"
 	LabelDockerImages = "docker-images"
+
+	AllowDUCheck = false
 )
 
 type partition struct {
@@ -282,6 +284,10 @@ func (self *RealFsInfo) GetDirFsDevice(dir string) (*DeviceInfo, error) {
 }
 
 func (self *RealFsInfo) GetDirUsage(dir string) (uint64, error) {
+	if !AllowDUCheck {
+		glog.Warningf("Skipping outrageously expensive dir usage check via du")
+		return 0, nil
+	}
 	out, err := exec.Command("nice", "-n", "19", "du", "-s", dir).CombinedOutput()
 	if err != nil {
 		return 0, fmt.Errorf("du command failed on %s with output %s - %s", dir, out, err)
